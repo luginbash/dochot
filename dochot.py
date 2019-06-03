@@ -11,7 +11,8 @@ from ofxtools.models import *
 from ofxtools.utils import UTC
 from decimal import Decimal
 from datetime import datetime
-
+import csv
+from datetime import datetime
 
 REGEX_STMT = {
     'SC': r'\ (\d{2}\/\d{2})\s+(\d{2}\/\d{2})\s+(\S+)\s+￥(\d+\.\d{2})',
@@ -61,13 +62,29 @@ if __name__ == '__main__':
                              help="verbosity for troubleshooting")
     args_parser.add_argument('-b', '--bank', help="name of the bank")
     args_parser.add_argument('-t', '--type', help="file type: pdf, html, etc")
+    args_parser.add_argument('-o', '--out', help='specify the name of output file',
+                             default=None)
     args = args_parser.parse_args()
     stmt = read_pdf(args.filename)
     #todo(qzhou): programmtic bank name determination
     bank_id = os.path.basename(args.filename).split('-')[0]
     bank_name = BANK_NAME[bank_id]
     transactions = extract_transaction(stmt, bank_name)
-    for trx in transactions:
-        print(trx)
+    out=args.out
+    if out == None:
+        now = str(datetime.now().strftime('%Y%M%d_%H%M%S'))
+        out = os.path.basename(args.filename).split('.')[1] + now + str('.csv')
+
+    with open(out,'w') as f:
+        writer = csv.writer(f)
+        writer.writerow(['date','payee','amount'])
+        for transaction in transactions:
+            writer.writerow(transaction)
+        
+
+
+        
+
+    
 
 
